@@ -39,13 +39,14 @@ locals {
 # ---------------------------------------------------------------------------------------------------------------------
 inputs = {
   create_ec2     = true
-  image_id       = "ami-003f4a6b343b2086b"
-  key_name       = "server-1-key"
+  image_id       = "ami-08a566a7bb555c96e"
+  key_name       = "server-key"                               # Need to manually create the key
   vpc_id         = dependency.vpc.outputs.default_vpc_id
   subnet_ids     = dependency.vpc.outputs.default_subnet_ids
-  instance_count = 2
+  instance_count = 1
   instance_type  = "t4g.medium"
   instance_name  = "server-1"
+  associate_public_ip_address = true
   metadata_options = {
     http_endpoint = "enabled"
     http_tokens   = "required"
@@ -77,9 +78,25 @@ inputs = {
           type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
           cidr_blocks = ["0.0.0.0/0"]
         }
+        port-5000-inbound = {
+          description = "Permit port 5000"
+          type        = "ingress", from_port = "5000", to_port = "5000", protocol = "tcp"
+          cidr_blocks = ["${dependency.my_ip.outputs.current_public_ip}", "0.0.0.0/0"]
+        }
       }
     }
   }
-  launch_from_launch_template = false
 
+  create_iam_instance_profile = true
+  iam_role_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
+
+  user_data = templatefile("${dirname(find_in_parent_folders())}/_components/aws/ec2/scripts/userdata-server-1.tftpl",
+   {}
+  )
+
+  additional_tags = {
+    server_name = "server-1"
+  }
 }

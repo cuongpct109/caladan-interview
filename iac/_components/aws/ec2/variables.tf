@@ -301,11 +301,7 @@ variable "launch_template" {
 variable "launch_template_name" {
   description = "The Name of launch template"
   type        = string
-
-  validation {
-    condition     = length(var.launch_template_name) > 0
-    error_message = "Launch template name can not be null"
-  }
+  default = ""
 }
 
 variable "launch_template_description" {
@@ -480,7 +476,7 @@ variable "launch_template_version" {
 variable "launch_from_launch_template" {
   type        = bool
   description = "Flag to decide launch from launch template or not"
-  default     = true
+  default     = false
 }
 
 
