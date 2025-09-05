@@ -9,7 +9,7 @@ on:
 
 jobs:
   # ------------------------------
-  # 1️⃣ Build job
+  # Build job
   # ------------------------------
   build:
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       # ------------------------------
-      # 1️⃣ Set image tag
+      # Set image tag
       # ------------------------------
       - name: Set image tag
         id: set_tag
@@ -29,7 +29,7 @@ jobs:
           echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
 
       # ------------------------------
-      # 2️⃣ Build and push Docker image (Multi-Arch)
+      # Build and push Docker image (Multi-Arch)
       # ------------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -52,7 +52,7 @@ jobs:
             . --push
 
   # ------------------------------
-  # 2️⃣ Deploy job
+  # Deploy job
   # ------------------------------
   deploy:
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v3
 
       # ------------------------------
-      # 3️⃣ Configure AWS credentials
+      # Configure AWS credentials
       # ------------------------------
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -75,7 +75,7 @@ jobs:
           aws-region: ap-southeast-1
 
       # ------------------------------
-      # 4️⃣ Get EC2 instance ID dynamically
+      # Get EC2 instance ID dynamically
       # ------------------------------
       - name: Get EC2 instance ID by tag
         id: get_instance_id
@@ -94,28 +94,30 @@ jobs:
           echo "Found instance ID: $INSTANCE_ID"
 
       # ------------------------------
-      # 5️⃣ Capture previous running image
+      # Capture previous running image
       # ------------------------------
       - name: Get previous running image
         run: |
+          # Send command to inspect the service image
           COMMAND_ID=$(aws ssm send-command \
-          --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-          --document-name "AWS-RunShellScript" \
-          --parameters 'commands=["docker inspect --format '\''{{.Config.Image}}'\'' latency-app"]' \
-          --query "Command.CommandId" \
-          --output text)
+            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["docker service inspect --format '\''{{range .Spec.TaskTemplate.ContainerSpec}}{{.Image}}{{end}}'\'' latency-app"]' \
+            --query "Command.CommandId" \
+            --output text)
 
+          # Get actual previous image
           PREVIOUS_IMAGE=$(aws ssm get-command-invocation \
-          --command-id "$COMMAND_ID" \
-          --instance-id "$INSTANCE_ID" \
-          --query "StandardOutputContent" \
-          --output text)
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID" \
+            --query "StandardOutputContent" \
+            --output text)
 
           echo "PREVIOUS_IMAGE=$PREVIOUS_IMAGE"
           echo "PREVIOUS_IMAGE=$PREVIOUS_IMAGE" >> $GITHUB_ENV
 
           # Check if empty → first deploy
-          if [ -z "$PREVIOUS_IMAGE" ]; then
+          if [ -z "$PREVIOUS_IMAGE" ] || [ "$PREVIOUS_IMAGE" = "None" ]; then
             echo "FIRST_DEPLOY=true"
             echo "FIRST_DEPLOY=true" >> $GITHUB_ENV
           else
@@ -133,52 +135,70 @@ jobs:
           echo "TARGET_IP=$TARGET_IP"
           echo "TARGET_IP=$TARGET_IP" >> $GITHUB_ENV
 
-      # ------------------------------
-      # 6️⃣ Deploy new image via SSM
-      # ------------------------------
-      - name: Deploy new image
+      - name: Ensure Docker Swarm is initialized
         run: |
+          # Send command to check Swarm state
           COMMAND_ID=$(aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["docker pull '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' && docker stop latency-app || true && docker rm latency-app || true && docker run -d --name latency-app -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
-            --query "Command.CommandId" \
-            --output text)
+            --parameters 'commands=["docker info --format '\''{{.Swarm.LocalNodeState}}'\''"]' \
+            --query "Command.CommandId" --output text)
 
-          echo "Sent command. ID=$COMMAND_ID"
+          # Wait a short moment to ensure the command runs
+          sleep 2
 
-          while true; do
-            STATUS=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "Status" --output text)
-
-            echo "Current status: $STATUS"
-            if [ "$STATUS" = "Success" ] || [ "$STATUS" = "Failed" ]; then
-              break
-            fi
-            sleep 2
-          done
-
-          OUTPUT=$(aws ssm get-command-invocation \
+          # Get actual node state
+          NODE_STATE=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
-            --query "StandardOutputContent" \
-            --output text)
+            --query "StandardOutputContent" --output text)
 
-          ERROR_OUTPUT=$(aws ssm get-command-invocation \
+          echo "Swarm state: $NODE_STATE"
+      
+          # If Swarm is not active, initialize it
+          if [ "$NODE_STATE" != "active" ]; then
+            echo "Swarm not initialized. Initializing..."
+            NODE_STATE=$(aws ssm send-command \
+              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --parameters 'commands=["docker swarm init --advertise-addr $(hostname -I | awk '\''{print $1}'\'')"]')
+          else
+            echo "Swarm already initialized."
+          fi
+
+      - name: Deploy new image via Docker Swarm
+        run: |
+          # Check if the service already exists
+          COMMAND_ID=$(aws ssm send-command \
+            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["docker service ls --filter name=latency-app -q"]' \
+            --query "Command.CommandId" --output text)
+
+          # Get actual service ID(s) from stdout
+          SERVICE_EXISTS=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
-            --query "StandardErrorContent" \
-            --output text)
+            --query "StandardOutputContent" --output text)
 
-          echo "--- STDOUT ---"
-          echo "$OUTPUT"
-          echo "--- STDERR ---"
-          echo "$ERROR_OUTPUT"
+          echo "Service exists: $SERVICE_EXISTS"
+      
+          if [ -z "$SERVICE_EXISTS" ]; then
+            echo "Service does not exist. Creating new service..."
+            aws ssm send-command \
+              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' > /dev/null
+          else
+            echo "Service exists. Updating service with new image..."
+            aws ssm send-command \
+              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --parameters 'commands=["docker service update --image '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]'
+          fi  
 
       # ------------------------------
-      # 7️⃣ Validate deployment & rollback
+      # Validate deployment & rollback
       # ------------------------------
       - name: Validate deployment & rollback
         if: env.FIRST_DEPLOY == 'false'
@@ -187,7 +207,7 @@ jobs:
           CURRENT_IMAGE=$(aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["docker inspect --format {{.Config.Image}} latency-app"]' \
+            --parameters 'commands=["docker service inspect --format '\''{{range .Spec.TaskTemplate.ContainerSpec}}{{.Image}}{{end}}'\'' latency-app"]' \
             --query "Command.CommandId" --output text)
       
           echo "Previous image: $PREVIOUS_IMAGE"
@@ -229,28 +249,33 @@ jobs:
       
           if [ "$SUCCESS" -eq 0 ]; then
             echo "Deployment failed, rolling back to previous image..." >> $GITHUB_STEP_SUMMARY
+
+            # Rollback service to previous image
             aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters "commands=[\"docker stop latency-app || true && docker rm latency-app || true && docker run -d --name latency-app -p 5000:5000 $PREVIOUS_IMAGE\"]"
+              --parameters 'commands=["docker service update --image '"$PREVIOUS_IMAGE"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]'
+
             exit 1
           fi
-      
+
           echo "Deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
 
+
       # -----------------------------------------------
-      # 7️⃣' If this is first deploy then only need to validate
+      # First deploy & validate (Docker Swarm)
       # -----------------------------------------------
-      - name: First deploy & validate
+        - name: First deploy & validate
         if: env.FIRST_DEPLOY == 'true'
         run: |
           echo "First deployment, no previous image to compare."
 
-          # Run initial image
+          # Create the service with 2 replicas
           aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"docker run -d --name latency-app -p 5000:5000 myuser/latency-app:$SHORT_HASH\"]"
+            --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
+            --query "Command.CommandId" --output text > /dev/null
 
           echo "Waiting for /metrics endpoint to be ready..."
 
@@ -261,4 +286,29 @@ jobs:
             STATUS_CODE=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} h_]()
+              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://localhost:5000/metrics"]' \
+              --query "Command.CommandId" --output text)
+
+            STATUS_CODE=$(aws ssm get-command-invocation \
+              --command-id "$STATUS_CODE" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardOutputContent" \
+              --output text)
+
+            echo "Try $i/$MAX_RETRIES, status_code=$STATUS_CODE"
+
+            if [ "$STATUS_CODE" = "200" ]; then
+              SUCCESS=1
+              echo "✅ /metrics is ready!"
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$SUCCESS" -eq 0 ]; then
+            echo "Initial deployment failed!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "Initial deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
+
