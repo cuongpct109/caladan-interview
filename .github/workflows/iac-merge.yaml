@@ -25,9 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: aws
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v4
 
-      #  Configure AWS credentials (access key + secret key)
+      # Configure AWS credentials using GitHub secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -35,18 +36,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
 
+      # Set Terragrunt directory based on workflow input
       - name: Set Terragrunt variables
         run: |
+          # Save the path to the Terragrunt environment folder to a GitHub environment variable
           echo "TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}" >> $GITHUB_ENV
       
-      # Run Terragrunt merge
+      # Run Terragrunt apply for all modules in the specified directory
       - name: Run Terragrunt Apply
         uses: gruntwork-io/terragrunt-action@v3
         with:
-          tg_dir: ${{ env.TG_DIR }}
-          tg_command: "run --all apply"
-          tg_add_approve: '1'       # add --auto-approve
-          tg_version: '0.86.2'
-          tofu_version: '1.6.0'
+          tg_dir: ${{ env.TG_DIR }}        # Terragrunt working directory
+          tg_command: "run --all apply"    # Command to apply all Terragrunt modules
+          tg_add_approve: '1'              # Add --auto-approve to skip interactive approval
+          tg_version: '0.86.2'             # Terragrunt version
+          tofu_version: '1.6.0'            # TOFU version (tool used by Terragrunt action)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
