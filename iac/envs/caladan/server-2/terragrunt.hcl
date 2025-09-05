@@ -67,15 +67,10 @@ inputs = {
           type        = "egress", from_port = "0", to_port = "0", protocol = "-1"
           cidr_blocks = ["0.0.0.0/0"]
         }
-        all-inbound-my-ip-only = {
-          description = "Permit all traffic from my current public IP"
+        all-inbound-vpc-default = {
+          description = "Permit all traffic from default vpc cidr"
           type        = "ingress", from_port = "0", to_port = "0", protocol = "-1"
-          cidr_blocks = ["${dependency.my_ip.outputs.current_public_ip}", "10.0.0.0/8"]
-        }
-        https-inbound = {
-          description = "Permit HTTPS"
-          type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
-          cidr_blocks = ["0.0.0.0/0"]
+          cidr_blocks = ["${dependency.vpc.outputs.default_vpc_cidr}"]
         }
       }
     }
