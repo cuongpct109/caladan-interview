@@ -65,7 +65,7 @@ See [apps/README.md](apps/README.md) for details on the application, usage, and 
 
 See [iac/README.md](iac/README.md) for overall infrastructure documentation.
 
-- [Terraform Modules](iac/_components/README.md)
+- [Terraform Modules](iac/_components/aws/README.md)
 - [Caladan Environment](iac/envs/caladan/README.md)
 
 ---
@@ -100,7 +100,7 @@ See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelin
 
 - [Latency App Documentation](apps/README.md)
 - [Infrastructure Documentation](iac/README.md)
-- [Terraform Modules](iac/_components/README.md)
+- [Terraform Modules](iac/_components/aws/README.md)
 - [Caladan Environment](iac/envs/caladan/README.md)
 - [GitHub Workflows](.github/README.md)
 
