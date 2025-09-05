@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1️⃣ Configure AWS credentials (access key + secret key)
+      #  Configure AWS credentials (access key + secret key)
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}" >> $GITHUB_ENV
       
-      # 2️⃣ Run Terragrunt merge
+      # Run Terragrunt merge
       - name: Run Terragrunt Apply
         uses: gruntwork-io/terragrunt-action@v3
         with:

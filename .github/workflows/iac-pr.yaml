@@ -5,6 +5,20 @@ on:
     paths:
       - 'iac/envs/caladan/**/*.hcl'   # all .hcl files under iac/envs/caladan
       - 'iac/_components/**'          # all files under iac/_components
+  workflow_dispatch:
+    inputs:
+      resource:
+        description: 'Resource to apply'
+        required: false
+        default: ""
+        type: choice
+        options:
+          - ""
+          - current-public-ip
+          - server-1
+          - server-2
+          - vpc
+          - ip-fetcher
 
 jobs:
   terragrunt-plan:
@@ -13,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1️⃣ Configure AWS credentials (access key + secret key)
+      # Configure AWS credentials (access key + secret key)
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -21,12 +35,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
 
-      # 2️⃣ Run Terragrunt Plan
+      - name: Set Terragrunt variables
+        run: |
+          echo "TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}" >> $GITHUB_ENV
+      
+      # Run Terragrunt Plan
       - name: Run Terragrunt Plan
         uses: gruntwork-io/terragrunt-action@v3
         with:
-          tg_dir: ./iac/envs/caladan
-          tg_command: run-all plan
+          tg_dir: ${{ env.TG_DIR }}
+          tg_command: "run --all plan"
           tg_add_approve: '1'       # add --auto-approve
           tg_version: '0.86.2'
           tofu_version: '1.6.0'
