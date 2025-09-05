@@ -1,0 +1,23 @@
+name: Terragrunt Plan
+
+on:
+  pull_request:
+    paths:
+      - 'iac/envs/caladan/**/*.hcl'   # all .hcl files under iac/envs/caladan
+      - 'iac/_components/**'          # all files under iac/_components
+
+jobs:
+  terragrunt-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Terragrunt Plan
+        uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_dir: ./iac/envs/caladan
+          tg_command: run-all plan
+          tg_add_approve: '1'       # add --auto-approve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
