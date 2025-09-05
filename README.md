@@ -104,4 +104,4 @@ See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelin
 - [Caladan Environment](iac/envs/caladan/README.md)
 - [GitHub Workflows](.github/README.md)
 
-> For more detailed instructions, see the linked README.md files in each module or
+> For more detailed instructions, see the linked README.md files in each module or email me via cuongpct109@gmail.com
