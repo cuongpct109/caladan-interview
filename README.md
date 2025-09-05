@@ -72,7 +72,7 @@ See [iac/README.md](iac/README.md) for overall infrastructure documentation.
 
 ## CI/CD
 
-See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelines.
+See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/CD pipelines.
 
 ---
 
