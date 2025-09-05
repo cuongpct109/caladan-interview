@@ -33,7 +33,7 @@ on:
           - ip-fetcher
 
 jobs:
-  terragrunt-plan:
+  terragrunt-merge:
     runs-on: ubuntu-latest
     environment: aws
     steps:
@@ -47,7 +47,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
 
-      # 2️⃣ Run Terragrunt Plan
+      # 2️⃣ Run Terragrunt merge
       - name: Run Terragrunt Apply
         uses: gruntwork-io/terragrunt-action@v3
         with:
