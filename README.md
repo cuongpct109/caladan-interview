@@ -105,8 +105,8 @@ See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelin
 
 - [Latency App Documentation](apps/README.md)
 - [Infrastructure Documentation](iac/README.md)
-- [Terraform Modules](iac/_components/aws/README.md)
-- [Caladan Environment](iac/envs/caladan/README.md)
-- [GitHub Workflows](.github/README.md)
+    - [Terraform Modules](iac/_components/aws/README.md)
+    - [Caladan AWS environment](iac/envs/caladan/README.md)
+- [GitHub Workflows](.github/workflows/README.md)
 
 > For more detailed instructions, see the linked README.md files in each module or email me via cuongpct109@gmail.com
