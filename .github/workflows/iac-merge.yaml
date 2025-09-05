@@ -22,7 +22,7 @@ on:
       resource:
         description: 'Resource to apply'
         required: false
-        default: ''
+        default: ""
         type: choice
         options:
           - ""
