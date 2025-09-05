@@ -83,10 +83,12 @@ See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelin
         - DOCKER_USER, DOCKER_PASSWORD -> these 2 for dockerhub credentials, or any registry that you want, just ensure the network is reachable and you can authenticate successfully in order to push and pull image from it
         - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY -> these 2 you can set it as secrets in an github environment called "aws", or just set it as normal secrets that github action runner can use 
 2. **Build & deploy app**:
-    - Edit code in `apps/`, push to main → CI/CD auto builds & deploys. Right now i treat it the same for PR and merge, but can separate it if i have more time, usually i will follow trunked based approach for this enhancement.
-    - Or build & run Docker manually as above.
+    - Edit code in `apps/`, push to main → CI/CD auto builds & deploys. 
+    - Right now i treat it the same for PR and merge, but can separate it if i have more time, usually i will follow trunked based approach for this enhancement.
 3. **Apply infrastructure**:
-    - Edit configs in `iac/envs/caladan/`, push → CI/CD auto applies. There are 2 pipelines, 1 for PR which will run "terragrunt run --all plan" and you can set the individual resource if you want using the input from manual trigger. The second one is for merge which is same as PR workflow but it will "terragrunt run --all apply"
+    - Edit configs in `iac/envs/caladan/`, push → CI/CD auto applies. 
+    - There are 2 pipelines, 1 for PR which will run "terragrunt run --all plan" and you can set the individual resource if you want using the input from manual trigger. 
+    - The second one is for merge which is same as PR workflow but it will "terragrunt run --all apply"
     - Or apply manually using Terragrunt.
 
 ---
