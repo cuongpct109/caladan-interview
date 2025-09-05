@@ -20,13 +20,6 @@ dependency "vpc" {
   }
 }
 
-dependency "my_ip" {
-  config_path = "../ip-fetcher"
-  mock_outputs = {
-    current-public-ip = "1.1.1.1/32"
-  }
-}
-
 locals {
   # Automatically load environment-level variables
   environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
