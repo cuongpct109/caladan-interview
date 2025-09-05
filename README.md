@@ -115,13 +115,14 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## Deployment Guide
 
-1. **Prepare AWS credentials** (for local or CI/CD).
+1. **Prepare AWS credentials and DockerHub credentials** (for local or CI/CD).
+    - We need these 4 secrets in github action: DOCKER_USERNAME, DOCKER_PASSWORD, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 2. **Build & deploy app**:
     - Edit code in `apps/`, push to main → CI/CD auto builds & deploys.
     - Or build & run Docker manually as above.
 3. **Apply infrastructure**:
     - Edit configs in `iac/envs/caladan/`, push → CI/CD auto applies.
-    - Or apply manually using Terragrunt.
+    - Or apply manually using GHA manual trigger.
 
 ---
 
@@ -131,6 +132,6 @@ This repository contains the source code and infrastructure for the Caladan inte
 - **Author**: tranduycuong
 - **Tags**: interview, terragrunt, terraform, aws, flask, docker, github-actions
 
----
+--- 
 
 > For more detailed instructions, see README.md files in each module or
