@@ -6,22 +6,24 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Directory Structure](#directory-structure)
-- [Latency App](#latency-app)
-- [Infrastructure (IAC)](#infrastructure-iac)
-- [CI/CD](#cicd)
-- [Deployment Guide](#deployment-guide)
-- [Additional Information](#additional-information)
-- [Internal Documentation](#internal-documentation)
+- [Overview](#overview)  
+- [Directory Structure](#directory-structure)  
+- [Latency App](#latency-app)  
+- [Infrastructure (IAC)](#infrastructure-iac)  
+- [CI/CD](#cicd)  
+- [Container Orchestration](#container-orchestration)  
+- [Tech Stack](#tech-stack)  
+- [Deployment Guide](#deployment-guide)  
+- [Additional Information](#additional-information)  
+- [Internal Documentation](#internal-documentation)  
 
 ---
 
 ## Overview
 
-- **Latency App**: A Flask application that measures network latency to a target host and exposes results via the `/metrics` API and on port 5000.
-- **IAC**: AWS infrastructure management (EC2, VPC, Security Group, IAM, etc.) using Terragrunt for modular and reusable Terraform configuration.
-- **CI/CD**: GitHub Actions pipelines for automated app build/deploy and infrastructure provisioning.
+- **Latency App**: A Flask application that measures network latency to a target host and exposes results via the `/metrics` API on port 5000.  
+- **IAC**: AWS infrastructure management (EC2, VPC, Security Groups, IAM, etc.) using Terragrunt for modular and reusable Terraform configuration.  
+- **CI/CD**: GitHub Actions pipelines for automated application build, deployment, and infrastructure provisioning.  
 
 ---
 
@@ -57,74 +59,87 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## Latency App
 
-See [Latency App Documentation](apps/README.md) for details on the application, usage, and API.
+- Implements a Flask API to measure network latency.  
+- Exposes `/metrics` endpoint on port 5000.  
+- Dockerized for deployment.  
+
+See [Latency App Documentation](apps/README.md) for more details.
 
 ---
 
-## Infrastructure As Code (IAC)
+## Infrastructure (IAC)
 
-See [Infrastructure As Code Documentation](iac/README.md) for overall infrastructure documentation.
+- Managed using Terragrunt/Terraform.  
+- Includes EC2, VPC, Security Groups, IAM, and other AWS resources.  
+- Modular, reusable configuration for different environments.  
 
-- [Terraform Modules](iac/_components/aws/README.md)
-- [Caladan Environment](iac/envs/caladan/README.md)
+See [IAC Documentation](iac/README.md) for full details:  
+- [Terraform Modules](iac/_components/aws/README.md)  
+- [Caladan Environment](iac/envs/caladan/README.md)  
 
 ---
 
 ## CI/CD
-- CI process: **Checkout** ->**Build image + Caching** -> **Push** image to registry.
-- CD process: **Deploy** -> **Validate** -> **Rollback** (if needed).
-- See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/CD pipelines.
 
+- **CI**: Checkout → Build Docker image → Cache → Push to registry.  
+- **CD**: Deploy → Validate → Rollback (if validation fails).  
+- See [GitHub Workflows Documentation](.github/workflows/README.md).  
 
-## Container orchestration
-- Choose Docker Swarm to deploy 2 replicas for high availability + rolling update each replica at a time to ensure no downtime during CD process + no image storage management overtime. Refer to [official documentation of Docker Swarm](https://docs.docker.com/engine/swarm/) for detailed infomations. 
-- See [app cicd workflows](.github/workflows/app.yaml) for implementation details.
 ---
 
+## Container Orchestration
 
-## Techstack used:
-1. **Terraform (version >= 1.3.0)**
-2. **Terragrunt (version 0.86.2)**
-3. **aws**
-4. **docker swarm**
-5. **github action**
+- Using **Docker Swarm** with 2 replicas for high availability.  
+- Supports **rolling updates** to ensure zero downtime.  
+- Automatic cleanup of old images handled via CI/CD workflow.  
+- See [App CI/CD Workflow](.github/workflows/app.yaml) for implementation details.  
+- Reference: [Docker Swarm Official Documentation](https://docs.docker.com/engine/swarm/).  
+
+---
+
+## Tech Stack
+
+1. Terraform (>= 1.3.0)  
+2. Terragrunt (0.86.2)  
+3. AWS (EC2, VPC, IAM, etc.)  
+4. Docker Swarm  
+5. GitHub Actions  
+
+---
 
 ## Deployment Guide
 
+1. **Prepare AWS and Docker Registry credentials**:  
+   - GitHub secrets required: `DOCKER_USER`, `DOCKER_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.  
+   - ⚠ Ensure secrets are correctly set before deploying.  
 
-1. **Prepare AWS and DockerHub credentials**:
-    - You need 4 secrets in github actions secrets: 
-        - DOCKER_USER, DOCKER_PASSWORD -> these 2 for dockerhub credentials, or any registry that you want, just ensure the network is reachable and you can authenticate successfully in order to push and pull image from it
-        - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY -> these 2 you can set it as secrets in an github environment called "aws", or just set it as normal secrets that github action runner can use
-        - Read more at [GitHub Workflows](.github/workflows/README.md)
-2. **Init AWS infrastructure**:
-    - Edit configs in `iac/envs/caladan/`, push → CI/CD auto applies. 
-    - There are 2 pipelines, 1 for PR which will run "terragrunt run --all plan" and you can set the individual resource if you want using the input from manual trigger. 
-    - The second one is for merge which is same as PR workflow but it will "terragrunt run --all apply"
-    - Or apply manually using Terragrunt.
-    - Read more at [GitHub Workflows](.github/workflows/README.md), [iac pr workflow](.github/workflows/iac-pr.yaml), [iac merge workflow](.github/workflows/iac-merge.yaml)
-3. **Build & deploy app**:
-    - Edit code in `apps/`, push to main → CI/CD auto builds & deploys. 
-    - Right now i treat it the same for PR and merge, but can separate it if i have more time, usually i will follow trunked based approach for this enhancement.
-    - Read more at [GitHub Workflows](.github/workflows/README.md) and [app cicd workflows](.github/workflows/app.yaml)
+2. **Initialize AWS infrastructure**:  
+   - Edit configuration in `iac/envs/caladan/` and push → CI/CD auto-applies.  
+   - Two workflows:  
+     - PR workflow: `terragrunt run --all plan`  
+     - Merge workflow: `terragrunt run --all apply`  
+   - Can also run Terragrunt manually.  
 
+3. **Build & deploy app**:  
+   - Edit code in `apps/`, push to main → CI/CD automatically builds & deploys.  
+   - Currently, the same workflow is used for PRs and merges; can be separated in future enhancements.  
 
 ---
 
 ## Additional Information
 
-- **License**: Apache License 2.0
-- **Author**: tranduycuong
-- **Tags**: interview, terragrunt, terraform, aws, flask, docker, github-actions
+- **License**: Apache License 2.0  
+- **Author**: tranduycuong  
+- **Tags**: interview, terragrunt, terraform, aws, flask, docker, github-actions  
 
 ---
 
 ## Internal Documentation
 
-- [Latency App Documentation](apps/README.md)
-- [Infrastructure As Code Documentation](iac/README.md)
-    - [Terraform Modules](iac/_components/aws/README.md)
-    - [Caladan AWS environment](iac/envs/caladan/README.md)
-- [GitHub Workflows](.github/workflows/README.md)
+- [Latency App Documentation](apps/README.md)  
+- [Infrastructure As Code Documentation](iac/README.md)  
+  - [Terraform Modules](iac/_components/aws/README.md)  
+  - [Caladan AWS Environment](iac/envs/caladan/README.md)  
+- [GitHub Workflows](.github/workflows/README.md)  
 
-> For more detailed instructions, see the linked README.md files in each module or email me via cuongpct109@gmail.com
+> For more details, see the linked README files in each module or contact cuongpct109@gmail.com  
