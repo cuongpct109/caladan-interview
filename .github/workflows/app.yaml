@@ -1,4 +1,4 @@
-name: Deploy Latency App
+name: Build and deploy app
 
 on:
   push:
@@ -125,6 +125,9 @@ jobs:
             echo "FIRST_DEPLOY=false" >> $GITHUB_ENV
           fi
 
+      # ------------------------------
+      # Capture private IP of server-2
+      # ------------------------------
       - name: Get private IP of server-2
         id: get_target_ip
         run: |
@@ -135,6 +138,9 @@ jobs:
           echo "TARGET_IP=$TARGET_IP"
           echo "TARGET_IP=$TARGET_IP" >> $GITHUB_ENV
 
+      # ------------------------------
+      # Ensure Docker Swarm is initialized on the target instance
+      # ------------------------------
       - name: Ensure Docker Swarm is initialized
         run: |
           # Send command to check Swarm state
@@ -166,6 +172,11 @@ jobs:
             echo "Swarm already initialized."
           fi
 
+      # ------------------------------
+      # Deploy or update the latency-app service via Docker Swarm
+      # This step checks if the service exists, creates it if not, or updates the image if it does.
+      # It waits for the SSM command to finish and polls until all replicas are running.
+      # ------------------------------
       - name: Deploy new image via Docker Swarm
         run: |
           # ------------------------------
@@ -204,7 +215,7 @@ jobs:
               --query "Command.CommandId" --output text)
           fi
 
-          # ✅ Chờ command chạy xong
+          # ✅ wait until command run completes
           while true; do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
@@ -278,7 +289,7 @@ jobs:
       
           echo "New image deployed, validating /metrics endpoint..."
 
-          SUCCESS=0  # khởi tạo biến
+          SUCCESS=0
           
           COMMAND_ID=$(aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
@@ -301,7 +312,7 @@ jobs:
                       ;;
                   Failed|Cancelled|TimedOut)
                       echo "❌ Command did not succeed: $STATUS"
-                      exit 1   # hoặc rollback
+                      exit 1   # or rollback
                       ;;
                   *)
                       echo "⏳ Command still running..."
