@@ -81,7 +81,7 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## CI/CD
 
-- **CI**: Checkout → Build Multi-architecture Docker image → Cache → Push to registry.  
+- **CI**: Checkout → Build Multi-Architecture Docker image with Caching → Push to registry.  
 - **CD**: Deploy → Validate → Rollback (if validation fails).  
 - See [GitHub Workflows Documentation](.github/workflows/README.md).  
 
