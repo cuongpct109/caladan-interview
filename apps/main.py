@@ -34,4 +34,8 @@ def metrics():
 
 if __name__ == "__main__":
     # Start background thread for latency measurement
-    thread = threading.Th
+    thread = threading.Thread(target=measure_latency, daemon=True)
+    thread.start()
+
+    # Start Flask app
+    app.run(host="0.0.0.0", port=5000)
