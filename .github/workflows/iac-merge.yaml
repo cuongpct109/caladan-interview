@@ -10,15 +10,6 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      action:
-        description: 'Terragrunt action to run'
-        required: false
-        default: 'apply'
-        type: choice
-        options:
-          - apply
-          - plan
-          - destroy
       resource:
         description: 'Resource to apply'
         required: false
@@ -49,7 +40,6 @@ jobs:
 
       - name: Set Terragrunt variables
         run: |
-          echo "TG_ACTION=run --all ${{ github.event.inputs.action }}" >> $GITHUB_ENV
           echo "TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}" >> $GITHUB_ENV
       
       # 2️⃣ Run Terragrunt merge
@@ -57,7 +47,7 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v3
         with:
           tg_dir: ${{ env.TG_DIR }}
-          tg_command: ${{ env.TG_ACTION }}
+          tg_command: "run --all apply"
           tg_add_approve: '1'       # add --auto-approve
           tg_version: '0.86.2'
           tofu_version: '1.6.0'
