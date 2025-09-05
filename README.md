@@ -91,7 +91,7 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 - Using **Docker Swarm** with 2 replicas for high availability.  
 - Supports **rolling updates** to ensure zero downtime.  
-- Automatic cleanup of old images handled via CI/CD workflow.  
+- **Automatically handles image storage** on each node by docker swarm.
 - See [App CI/CD Workflow](.github/workflows/app.yaml) for implementation details.  
 - Reference: [Docker Swarm Official Documentation](https://docs.docker.com/engine/swarm/).  
 
@@ -111,7 +111,7 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 1. **Prepare AWS and Docker Registry credentials**:  
    - GitHub secrets required: `DOCKER_USER`, `DOCKER_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.  
-   - ⚠ Ensure secrets are correctly set before deploying.  
+   - ⚠ Ensure secrets are correctly set before jumping to next steps.  
 
 2. **Initialize AWS infrastructure**:  
    - Edit configuration in `iac/envs/caladan/` and push → CI/CD auto-applies.  
@@ -136,7 +136,7 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## Internal Documentation
 
-- [Latency App Documentation](apps/README.md)  
+- [Latency App Documentation](apps/README.md)
 - [Infrastructure As Code Documentation](iac/README.md)  
   - [Terraform Modules](iac/_components/aws/README.md)  
   - [Caladan AWS Environment](iac/envs/caladan/README.md)  
