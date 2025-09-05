@@ -187,20 +187,20 @@ jobs:
           # ------------------------------
           # Create or update service
           # ------------------------------
-            
+
           if [ -z "$SERVICE_EXISTS" ]; then
             echo "Service does not exist. Creating..."
             COMMAND_ID=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"***"'/latency-app:'"$SHORT_HASH"'"]' \
+              --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
               --query "Command.CommandId" --output text)
           else
             echo "Service exists. Updating..."
             COMMAND_ID=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service update --image '"***"'/latency-app:'"$SHORT_HASH"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]' \
+              --parameters 'commands=["docker service update --image '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]' \
               --query "Command.CommandId" --output text)
           fi
 
