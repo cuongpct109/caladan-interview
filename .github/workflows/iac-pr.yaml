@@ -23,7 +23,7 @@ on:
 jobs:
   terragrunt-plan:
     runs-on: ubuntu-latest
-
+    environment: aws
     steps:
       # Checkout repository
       - uses: actions/checkout@v4
