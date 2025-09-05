@@ -49,9 +49,9 @@ jobs:
 
       - name: Set Terragrunt variables
         run: |
-          echo 'TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}' >> $GITHUB_ENV
-          echo 'TG_ACTION="run --all ${{ github.event.inputs.action }}"' >> $GITHUB_ENV
-
+          echo "TG_ACTION=run --all ${{ github.event.inputs.action }}" >> $GITHUB_ENV
+          echo "TG_DIR=./iac/envs/caladan/${{ github.event.inputs.resource }}" >> $GITHUB_ENV
+      
       # 2️⃣ Run Terragrunt merge
       - name: Run Terragrunt Apply
         uses: gruntwork-io/terragrunt-action@v3
