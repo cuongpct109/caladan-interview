@@ -52,7 +52,7 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v3
         with:
           tg_dir: ./iac/envs/caladan/${{ github.event.inputs.resource }}
-          tg_command: run-all ${{ github.event.inputs.action }}
+          tg_command: run --all ${{ github.event.inputs.action }}
           tg_add_approve: '1'       # add --auto-approve
           tg_version: '0.86.2'
           tofu_version: '1.6.0'
