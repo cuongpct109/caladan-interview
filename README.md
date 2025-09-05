@@ -71,14 +71,14 @@ See [Infrastructure As Code Documentation](iac/README.md) for overall infrastruc
 ---
 
 ## CI/CD
-CI process: **Checkout** ->**Build image + Caching** -> **Push** image to registry.
-CD process: **Deploy** -> **Validate** -> **Rollback** (if needed).
-See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/CD pipelines.
+- CI process: **Checkout** ->**Build image + Caching** -> **Push** image to registry.
+- CD process: **Deploy** -> **Validate** -> **Rollback** (if needed).
+- See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/CD pipelines.
 
 
 ## Container orchestration
-Choose Docker Swarm to deploy 2 replicas for high availability + rolling update each replica at a time to ensure no downtime during CD process + no image storage management overtime. Refer to [official documentation of Docker Swarm](https://docs.docker.com/engine/swarm/) for detailed infomations. 
-See [app cicd workflows](.github/workflows/app.yaml) for implementation details.
+- Choose Docker Swarm to deploy 2 replicas for high availability + rolling update each replica at a time to ensure no downtime during CD process + no image storage management overtime. Refer to [official documentation of Docker Swarm](https://docs.docker.com/engine/swarm/) for detailed infomations. 
+- See [app cicd workflows](.github/workflows/app.yaml) for implementation details.
 ---
 
 
