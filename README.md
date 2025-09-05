@@ -61,9 +61,9 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 - Implements a Flask API to measure network latency.  
 - Exposes `/metrics` endpoint on port 5000.  
-- Dockerized for deployment.  
+- Dockerized for deployment.
 
-See [Latency App Documentation](apps/README.md) for more details.
+- See [Latency App Documentation](apps/README.md) for more details.
 
 ---
 
@@ -73,9 +73,9 @@ See [Latency App Documentation](apps/README.md) for more details.
 - Includes EC2, VPC, Security Groups, IAM, and other AWS resources.  
 - Modular, reusable configuration for different environments.  
 
-See [IAC Documentation](iac/README.md) for full details:  
-- [Terraform Modules](iac/_components/aws/README.md)  
-- [Caladan Environment](iac/envs/caladan/README.md)  
+- See [IAC Documentation](iac/README.md) for full details:  
+    - [Terraform Modules](iac/_components/aws/README.md)  
+    - [Caladan Environment](iac/envs/caladan/README.md)  
 
 ---
 
