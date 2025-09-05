@@ -1,8 +1,8 @@
 from flask import Flask, jsonify
-import subprocess
 import threading
 import time
 import os
+from ping3 import ping
 
 app = Flask(__name__)
 
@@ -18,19 +18,9 @@ def measure_latency():
     global latency_ms
     while True:
         try:
-            # Use ping with 1 packet, return response time
-            result = subprocess.run(
-                ["ping", "-c", "1", TARGET_HOST],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode == 0:
-                # Parse response time from output: time=xx ms
-                for line in result.stdout.splitlines():
-                    if "time=" in line:
-                        latency_ms = float(line.split("time=")[1].split()[0])
-            else:
-                latency_ms = None
+            # ping3 returns latency in seconds, or None if unreachable
+            latency = ping(TARGET_HOST, timeout=2)
+            latency_ms = latency * 1000 if latency is not None else None
         except Exception:
             latency_ms = None
         time.sleep(INTERVAL)
@@ -44,8 +34,4 @@ def metrics():
 
 if __name__ == "__main__":
     # Start background thread for latency measurement
-    thread = threading.Thread(target=measure_latency, daemon=True)
-    thread.start()
-    
-    # Run Flask server
-    app.run(host="0.0.0.0", port=5000)
+    thread = threading.Th
