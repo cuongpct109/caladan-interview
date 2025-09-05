@@ -92,7 +92,7 @@ See [.github/README.md](.github/README.md) for explanations of all CI/CD pipelin
     - There are 2 pipelines, 1 for PR which will run "terragrunt run --all plan" and you can set the individual resource if you want using the input from manual trigger. 
     - The second one is for merge which is same as PR workflow but it will "terragrunt run --all apply"
     - Or apply manually using Terragrunt.
-    - Read more at [GitHub Workflows](.github/workflows/README.md), [iac pr workflows](.github/workflows/iac-pr.yaml), [iac merge workflows](.github/workflows/iac-merge.yaml)
+    - Read more at [GitHub Workflows](.github/workflows/README.md), [iac pr workflow](.github/workflows/iac-pr.yaml), [iac merge workflow](.github/workflows/iac-merge.yaml)
 
 ---
 
