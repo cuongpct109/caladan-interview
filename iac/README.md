@@ -21,7 +21,6 @@ This directory contains all Terraform and Terragrunt configurations for provisio
 
 - `server-1`: EC2 instance running the Latency App.
 - `server-2`: EC2 instance as latency measurement target.
-- `ip-fetcher`: Module to fetch and whitelist your public IP.
 - `vpc`: Default VPC and subnet management.
 
 ---
