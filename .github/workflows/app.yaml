@@ -26,6 +26,7 @@ jobs:
     # 2️⃣ Build and push Docker image
     # ------------------------------
     - name: Build and push Docker image
+      working-directory: ./apps
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/latency-app:$SHORT_HASH .
         docker tag ${{ secrets.DOCKER_USERNAME }}/latency-app:$SHORT_HASH ${{ secrets.DOCKER_USERNAME }}/latency-app:latest

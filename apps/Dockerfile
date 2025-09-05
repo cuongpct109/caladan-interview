@@ -1,0 +1,46 @@
+# --------------------------
+# 1. Builder stage
+# --------------------------
+FROM python:3.11-slim AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies (optional, only if needed for some libs)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+
+# Ensure venv is used
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+# --------------------------
+# 2. Runner stage
+# --------------------------
+FROM python:3.11-slim AS runner
+
+# Set working directory
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Ensure venv is used
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy only the application code
+COPY . .
+
+# Expose port 5000
+EXPOSE 5000
+
+# Run the app
+CMD ["python", "main.py"]
