@@ -25,6 +25,7 @@ on:
         default: ''
         type: choice
         options:
+          - ""
           - current-public-ip
           - server-1
           - server-2
