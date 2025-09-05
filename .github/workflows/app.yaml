@@ -216,11 +216,12 @@ jobs:
               --query "StandardOutputContent" \
               --output text)
 
-            echo -e "Try $? time"
-            echo $STATUS_CODE
-            
+            echo -e "Try $?/12 time"
+            echo -e "status_code=$STATUS_CODE"
+
             if [ "$STATUS_CODE" = "200" ]; then
               SUCCESS=1
+              echo "✅ /metrics is ready!"
               break
             fi
             sleep 5
