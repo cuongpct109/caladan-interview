@@ -23,5 +23,6 @@ jobs:
           tg_command: run-all plan
           tg_add_approve: '1'       # add --auto-approve
           tg_version: '0.86.2'
+          tf_version: '1.13.1'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
