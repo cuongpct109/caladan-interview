@@ -78,21 +78,23 @@ See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/C
 
 ## Deployment Guide
 
+
 1. **Prepare AWS and DockerHub credentials**:
     - You need 4 secrets in github actions secrets: 
         - DOCKER_USER, DOCKER_PASSWORD -> these 2 for dockerhub credentials, or any registry that you want, just ensure the network is reachable and you can authenticate successfully in order to push and pull image from it
         - AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY -> these 2 you can set it as secrets in an github environment called "aws", or just set it as normal secrets that github action runner can use
         - Read more at [GitHub Workflows](.github/workflows/README.md)
-2. **Build & deploy app**:
-    - Edit code in `apps/`, push to main → CI/CD auto builds & deploys. 
-    - Right now i treat it the same for PR and merge, but can separate it if i have more time, usually i will follow trunked based approach for this enhancement.
-    - Read more at [GitHub Workflows](.github/workflows/README.md) and [app cicd workflows](.github/workflows/app.yaml)
-3. **Apply infrastructure**:
+2. **Init AWS infrastructure**:
     - Edit configs in `iac/envs/caladan/`, push → CI/CD auto applies. 
     - There are 2 pipelines, 1 for PR which will run "terragrunt run --all plan" and you can set the individual resource if you want using the input from manual trigger. 
     - The second one is for merge which is same as PR workflow but it will "terragrunt run --all apply"
     - Or apply manually using Terragrunt.
     - Read more at [GitHub Workflows](.github/workflows/README.md), [iac pr workflow](.github/workflows/iac-pr.yaml), [iac merge workflow](.github/workflows/iac-merge.yaml)
+3. **Build & deploy app**:
+    - Edit code in `apps/`, push to main → CI/CD auto builds & deploys. 
+    - Right now i treat it the same for PR and merge, but can separate it if i have more time, usually i will follow trunked based approach for this enhancement.
+    - Read more at [GitHub Workflows](.github/workflows/README.md) and [app cicd workflows](.github/workflows/app.yaml)
+
 
 ---
 
