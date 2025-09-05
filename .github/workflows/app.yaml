@@ -63,12 +63,12 @@ jobs:
       id: get_instance_id
       run: |
         INSTANCE_ID=$(aws ec2 describe-instances \
-          --filters "Name=tag:server-name,Values=server-1" "Name=instance-state-name,Values=running" \
+          --filters "Name=tag:server_name,Values=server-1" "Name=instance-state-name,Values=running" \
           --query "Reservations[0].Instances[0].InstanceId" \
           --output text)
 
         if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
-          echo "Error: No running instance found with tag server-name=server-1"
+          echo "Error: No running instance found with tag server_name=server-1"
           exit 1
         fi
 
