@@ -1,20 +1,25 @@
 name: Deploy Latency App
 
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'apps/**'         # only trigger if changes in apps/
+
+#   pull_request:
+#     branches:
+#       - main
+#     paths:
+#       - 'apps/**'         # only trigger if changes in apps/
+
+#   workflow_dispatch:       # always allow manual trigger
 on:
   push:
     branches:
       - main
-    paths:
-      - 'apps/**'         # only trigger if changes in apps/
-
   pull_request:
-    branches:
-      - main
-    paths:
-      - 'apps/**'         # only trigger if changes in apps/
-
-  workflow_dispatch:       # always allow manual trigger
-
+  workflow_dispatch:
   
 jobs:
   deploy:

@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - main
-      
+
 jobs:
   terragrunt-plan:
     runs-on: ubuntu-latest
@@ -22,5 +22,6 @@ jobs:
           tg_dir: ./iac/envs/caladan
           tg_command: run-all plan
           tg_add_approve: '1'       # add --auto-approve
+          tg_version: '0.86.2'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
