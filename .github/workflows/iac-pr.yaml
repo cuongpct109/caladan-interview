@@ -14,11 +14,9 @@ on:
         type: choice
         options:
           - ""
-          - current-public-ip
           - server-1
           - server-2
           - vpc
-          - ip-fetcher
 
 jobs:
   terragrunt-plan:

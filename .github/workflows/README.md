@@ -18,7 +18,7 @@ This directory contains CI/CD pipeline definitions for the Caladan Interview Pro
 - **Purpose:** Run Terragrunt plan for infrastructure changes on pull requests.
 - **Main steps:**
   - Configure AWS credentials.
-  - Optionally log in to Docker Hub.
+  - Log in to Docker Hub (public registry).
   - Run `terragrunt plan` for affected modules.
 - **Triggers:** On pull requests affecting IAC files and manual dispatch.
 
@@ -27,11 +27,11 @@ This directory contains CI/CD pipeline definitions for the Caladan Interview Pro
 - **Purpose:** Apply infrastructure changes after merging to `main`.
 - **Main steps:**
   - Configure AWS credentials.
-  - Optionally log in to Docker Hub.
+  - Log in to Docker Hub (public registry).
   - Run `terragrunt apply` for affected modules.
 - **Triggers:** On push to `main` affecting IAC files and manual dispatch.
 
-## Secrets Required
+## Required Secrets
 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
@@ -41,4 +41,4 @@ This directory contains CI/CD pipeline definitions for the Caladan Interview Pro
 
 ---
 
-For details on each workflow, see
+For details on each workflow, see the corresponding YAML file in `.github/workflows/

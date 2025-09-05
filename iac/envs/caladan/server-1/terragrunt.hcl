@@ -76,7 +76,7 @@ inputs = {
         port-5000-inbound = {
           description = "Permit port 5000"
           type        = "ingress", from_port = "5000", to_port = "5000", protocol = "tcp"
-          cidr_blocks = ["${dependency.my_ip.outputs.current_public_ip}", "0.0.0.0/0"]
+          cidr_blocks = ["0.0.0.0/0"]
         }
       }
     }
