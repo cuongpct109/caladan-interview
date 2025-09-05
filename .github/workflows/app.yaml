@@ -165,38 +165,73 @@ jobs:
           else
             echo "Swarm already initialized."
           fi
-
+          
       - name: Deploy new image via Docker Swarm
         run: |
-          # Check if the service already exists
+          # ------------------------------
+          # Check if service exists
+          # ------------------------------
           COMMAND_ID=$(aws ssm send-command \
             --targets "Key=instanceIds,Values=$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=["docker service ls --filter name=latency-app -q"]' \
             --query "Command.CommandId" --output text)
-
-          # Get actual service ID(s) from stdout
+      
           SERVICE_EXISTS=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "$INSTANCE_ID" \
             --query "StandardOutputContent" --output text)
-
+      
           echo "Service exists: $SERVICE_EXISTS"
       
+          # ------------------------------
+          # Create or update service
+          # ------------------------------
           if [ -z "$SERVICE_EXISTS" ]; then
-            echo "Service does not exist. Creating new service..."
+            echo "Service does not exist. Creating..."
             aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' > /dev/null
+              --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
+              --query "Command.CommandId" --output text
           else
-            echo "Service exists. Updating service with new image..."
+            echo "Service exists. Updating..."
             aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service update --image '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]'
-          fi  
-
+              --parameters 'commands=["docker service update --image '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]' \
+              --query "Command.CommandId" --output text
+          fi
+      
+          # ------------------------------
+          # Poll rollout status
+          # ------------------------------
+          echo "Waiting for service to reach desired state..."
+          while true; do
+            STATUS=$(aws ssm send-command \
+              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+              --document-name "AWS-RunShellScript" \
+              --parameters 'commands=["docker service ps latency-app --filter desired-state=Running --format {{.Name}} {{.CurrentState}}"]' \
+              --query "Command.CommandId" --output text)
+      
+            OUTPUT=$(aws ssm get-command-invocation \
+              --command-id "$STATUS" \
+              --instance-id "$INSTANCE_ID" \
+              --query "StandardOutputContent" --output text)
+      
+            echo "$OUTPUT"
+      
+            # Kiểm tra tất cả replicas đã chạy Running chưa
+            NOT_READY=$(echo "$OUTPUT" | grep -v "Running")
+            if [ -z "$NOT_READY" ]; then
+              echo "All replicas are running ✅"
+              break
+            else
+              echo "Some replicas not ready yet. Waiting..."
+            fi
+            sleep 5
+          done
+      
       # ------------------------------
       # Validate deployment & rollback
       # ------------------------------
@@ -282,14 +317,14 @@ jobs:
           MAX_RETRIES=12
           SUCCESS=0
           for i in $(seq 1 $MAX_RETRIES); do
-            STATUS_CODE=$(aws ssm send-command \
+            COMMAND_ID=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://localhost:5000/metrics"]' \
+              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://127.0.0.1:5000/metrics"]' \
               --query "Command.CommandId" --output text)
-
+            
             STATUS_CODE=$(aws ssm get-command-invocation \
-              --command-id "$STATUS_CODE" \
+              --command-id "$COMMAND_ID" \
               --instance-id "$INSTANCE_ID" \
               --query "StandardOutputContent" \
               --output text)
