@@ -221,15 +221,12 @@ jobs:
       
             echo "$OUTPUT"
       
-            # Kiểm tra tất cả replicas đã chạy Running chưa
-            NOT_READY=$(echo "$OUTPUT" | grep -v "Running")
-            if [ -z "$NOT_READY" ]; then
+            if echo "$OUTPUT" | grep -v "Running" > /dev/null; then
+              echo "Some replicas not ready yet"
+            else
               echo "All replicas are running ✅"
               break
-            else
-              echo "Some replicas not ready yet. Waiting..."
             fi
-            sleep 5
           done
       
       # ------------------------------
