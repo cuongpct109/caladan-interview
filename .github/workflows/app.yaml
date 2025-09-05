@@ -210,7 +210,8 @@ jobs:
               --document-name "AWS-RunShellScript" \
               --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://localhost:5000/metrics"]' \
               --query "Command.CommandId" --output text)
-      
+            echo -e "Try $? time"
+            echo $STATUS_CODE
             if [ "$STATUS_CODE" = "200" ]; then
               SUCCESS=1
               break
