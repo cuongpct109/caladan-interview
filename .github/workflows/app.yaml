@@ -216,7 +216,7 @@ jobs:
               --query "StandardOutputContent" \
               --output text)
 
-            echo -e "Try $?/12 time"
+            echo -e "Try $i/12 time"
             echo -e "status_code=$STATUS_CODE"
 
             if [ "$STATUS_CODE" = "200" ]; then
