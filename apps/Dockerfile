@@ -31,6 +31,9 @@ COPY --from=builder /opt/venv /opt/venv
 # Ensure venv is used
 ENV PATH="/opt/venv/bin:$PATH"
 
+# ✅ Default value for TARGET_HOST (can be overridden at runtime)
+ENV TARGET_HOST=127.0.0.1
+
 # Copy only the application code
 COPY . .
 

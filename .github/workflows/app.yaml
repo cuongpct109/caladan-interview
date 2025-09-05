@@ -120,6 +120,16 @@ jobs:
           echo "FIRST_DEPLOY=false" >> $GITHUB_ENV
         fi
 
+    - name: Get private IP of server-2
+      id: get_target_ip
+      run: |
+        TARGET_IP=$(aws ec2 describe-instances \
+          --filters "Name=tag:server_name,Values=server-2" "Name=instance-state-name,Values=running" \
+          --query "Reservations[0].Instances[0].PrivateIpAddress" \
+          --output text)
+        echo "TARGET_IP=$TARGET_IP"
+        echo "TARGET_IP=$TARGET_IP" >> $GITHUB_ENV
+        
     # ------------------------------
     # 6️⃣ Deploy new image via SSM
     # ------------------------------
@@ -128,7 +138,7 @@ jobs:
         COMMAND_ID=$(aws ssm send-command \
           --targets "Key=instanceIds,Values=$INSTANCE_ID" \
           --document-name "AWS-RunShellScript" \
-          --parameters 'commands=["docker pull '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' && docker stop latency-app || true && docker rm latency-app || true && docker run -d --name latency-app -p 5000:5000 '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
+          --parameters 'commands=["docker pull '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"' && docker stop latency-app || true && docker rm latency-app || true && docker run -d --name latency-app -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
           --query "Command.CommandId" \
           --output text)
 
