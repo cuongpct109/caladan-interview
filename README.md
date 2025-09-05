@@ -57,13 +57,13 @@ This repository contains the source code and infrastructure for the Caladan inte
 
 ## Latency App
 
-See [apps/README.md](apps/README.md) for details on the application, usage, and API.
+See [Latency App Documentation](apps/README.md) for details on the application, usage, and API.
 
 ---
 
-## Infrastructure (IAC)
+## Infrastructure As Code (IAC)
 
-See [iac/README.md](iac/README.md) for overall infrastructure documentation.
+See [Infrastructure As Code Documentation](iac/README.md) for overall infrastructure documentation.
 
 - [Terraform Modules](iac/_components/aws/README.md)
 - [Caladan Environment](iac/envs/caladan/README.md)
@@ -107,7 +107,7 @@ See [GitHub Workflows](.github/workflows/README.md) for explanations of all CI/C
 ## Internal Documentation
 
 - [Latency App Documentation](apps/README.md)
-- [Infrastructure Documentation](iac/README.md)
+- [Infrastructure As Code Documentation](iac/README.md)
     - [Terraform Modules](iac/_components/aws/README.md)
     - [Caladan AWS environment](iac/envs/caladan/README.md)
 - [GitHub Workflows](.github/workflows/README.md)
