@@ -5,9 +5,6 @@ on:
     paths:
       - 'iac/envs/caladan/**/*.hcl'   # all .hcl files under iac/envs/caladan
       - 'iac/_components/**'          # all files under iac/_components
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       resource:

@@ -259,7 +259,6 @@ jobs:
       # Validate deployment & rollback
       # ------------------------------
       - name: Validate deployment & rollback
-        if: env.FIRST_DEPLOY == 'false'
         run: |
           # Get current image after deployment
           CURRENT_IMAGE=$(aws ssm send-command \
