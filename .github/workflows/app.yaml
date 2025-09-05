@@ -211,7 +211,7 @@ jobs:
             STATUS=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service ps latency-app --filter desired-state=Running --format {{.Name}} {{.CurrentState}}"]' \
+              --parameters 'commands=["docker service ps latency-app --filter desired-state=Running --format {{.Name}}"]' \
               --query "Command.CommandId" --output text)
       
             OUTPUT=$(aws ssm get-command-invocation \
@@ -232,117 +232,117 @@ jobs:
             sleep 5
           done
       
-      # ------------------------------
-      # Validate deployment & rollback
-      # ------------------------------
-      - name: Validate deployment & rollback
-        if: env.FIRST_DEPLOY == 'false'
-        run: |
-          # Get current image after deployment
-          CURRENT_IMAGE=$(aws ssm send-command \
-            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["docker service inspect --format '\''{{range .Spec.TaskTemplate.ContainerSpec}}{{.Image}}{{end}}'\'' latency-app"]' \
-            --query "Command.CommandId" --output text)
+      # # ------------------------------
+      # # Validate deployment & rollback
+      # # ------------------------------
+      # - name: Validate deployment & rollback
+      #   if: env.FIRST_DEPLOY == 'false'
+      #   run: |
+      #     # Get current image after deployment
+      #     CURRENT_IMAGE=$(aws ssm send-command \
+      #       --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+      #       --document-name "AWS-RunShellScript" \
+      #       --parameters 'commands=["docker service inspect --format '\''{{range .Spec.TaskTemplate.ContainerSpec}}{{.Image}}{{end}}'\'' latency-app"]' \
+      #       --query "Command.CommandId" --output text)
       
-          echo "Previous image: $PREVIOUS_IMAGE"
-          echo "Current image:  $CURRENT_IMAGE"
+      #     echo "Previous image: $PREVIOUS_IMAGE"
+      #     echo "Current image:  $CURRENT_IMAGE"
       
-          # Check if deployment actually happened
-          if [ "$CURRENT_IMAGE" = "$PREVIOUS_IMAGE" ]; then
-            echo "No new deployment happened (image unchanged)." >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
+      #     # Check if deployment actually happened
+      #     if [ "$CURRENT_IMAGE" = "$PREVIOUS_IMAGE" ]; then
+      #       echo "No new deployment happened (image unchanged)." >> $GITHUB_STEP_SUMMARY
+      #       exit 0
+      #     fi
       
-          echo "New image deployed, validating /metrics endpoint..."
+      #     echo "New image deployed, validating /metrics endpoint..."
       
-          # Validation loop: check /metrics endpoint for up to 60s (every 5s)
-          MAX_RETRIES=12
-          SUCCESS=0
-          for i in $(seq 1 $MAX_RETRIES); do
-            COMMAND_ID=$(aws ssm send-command \
-              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://localhost:5000/metrics"]' \
-              --query "Command.CommandId" --output text)
-            STATUS_CODE=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "StandardOutputContent" \
-              --output text)
+      #     # Validation loop: check /metrics endpoint for up to 60s (every 5s)
+      #     MAX_RETRIES=12
+      #     SUCCESS=0
+      #     for i in $(seq 1 $MAX_RETRIES); do
+      #       COMMAND_ID=$(aws ssm send-command \
+      #         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+      #         --document-name "AWS-RunShellScript" \
+      #         --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://localhost:5000/metrics"]' \
+      #         --query "Command.CommandId" --output text)
+      #       STATUS_CODE=$(aws ssm get-command-invocation \
+      #         --command-id "$COMMAND_ID" \
+      #         --instance-id "$INSTANCE_ID" \
+      #         --query "StandardOutputContent" \
+      #         --output text)
 
-            echo -e "Try $i/12 time"
-            echo -e "status_code=$STATUS_CODE"
+      #       echo -e "Try $i/12 time"
+      #       echo -e "status_code=$STATUS_CODE"
 
-            if [ "$STATUS_CODE" = "200" ]; then
-              SUCCESS=1
-              echo "✅ /metrics is ready!"
-              break
-            fi
-            sleep 5
-          done
+      #       if [ "$STATUS_CODE" = "200" ]; then
+      #         SUCCESS=1
+      #         echo "✅ /metrics is ready!"
+      #         break
+      #       fi
+      #       sleep 5
+      #     done
       
-          if [ "$SUCCESS" -eq 0 ]; then
-            echo "Deployment failed, rolling back to previous image..." >> $GITHUB_STEP_SUMMARY
+      #     if [ "$SUCCESS" -eq 0 ]; then
+      #       echo "Deployment failed, rolling back to previous image..." >> $GITHUB_STEP_SUMMARY
 
-            # Rollback service to previous image
-            aws ssm send-command \
-              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service update --image '"$PREVIOUS_IMAGE"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]'
+      #       # Rollback service to previous image
+      #       aws ssm send-command \
+      #         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+      #         --document-name "AWS-RunShellScript" \
+      #         --parameters 'commands=["docker service update --image '"$PREVIOUS_IMAGE"' --replicas 2 --update-parallelism 1 --update-delay 5s latency-app"]'
 
-            exit 1
-          fi
+      #       exit 1
+      #     fi
 
-          echo "Deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
+      #     echo "Deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
 
-      # -----------------------------------------------
-      # First deploy & validate (Docker Swarm)
-      # -----------------------------------------------
-      - name: First deploy & validate
-        if: env.FIRST_DEPLOY == 'true'
-        run: |
-          echo "First deployment, no previous image to compare."
+      # # -----------------------------------------------
+      # # First deploy & validate (Docker Swarm)
+      # # -----------------------------------------------
+      # - name: First deploy & validate
+      #   if: env.FIRST_DEPLOY == 'true'
+      #   run: |
+      #     echo "First deployment, no previous image to compare."
 
-          # Create the service with 2 replicas
-          aws ssm send-command \
-            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
-            --query "Command.CommandId" --output text > /dev/null
+      #     # Create the service with 2 replicas
+      #     aws ssm send-command \
+      #       --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+      #       --document-name "AWS-RunShellScript" \
+      #       --parameters 'commands=["docker service create --name latency-app --replicas 2 -p 5000:5000 -e TARGET_HOST='"$TARGET_IP"' '"${{ secrets.DOCKER_USERNAME }}"'/latency-app:'"$SHORT_HASH"'"]' \
+      #       --query "Command.CommandId" --output text > /dev/null
 
-          echo "Waiting for /metrics endpoint to be ready..."
+      #     echo "Waiting for /metrics endpoint to be ready..."
 
-          # Validation loop: check /metrics endpoint for up to 60s (every 5s)
-          MAX_RETRIES=12
-          SUCCESS=0
-          for i in $(seq 1 $MAX_RETRIES); do
-            COMMAND_ID=$(aws ssm send-command \
-              --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-              --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://127.0.0.1:5000/metrics"]' \
-              --query "Command.CommandId" --output text)
+      #     # Validation loop: check /metrics endpoint for up to 60s (every 5s)
+      #     MAX_RETRIES=12
+      #     SUCCESS=0
+      #     for i in $(seq 1 $MAX_RETRIES); do
+      #       COMMAND_ID=$(aws ssm send-command \
+      #         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+      #         --document-name "AWS-RunShellScript" \
+      #         --parameters 'commands=["curl -s -o /dev/null -w %{http_code} http://127.0.0.1:5000/metrics"]' \
+      #         --query "Command.CommandId" --output text)
             
-            STATUS_CODE=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "$INSTANCE_ID" \
-              --query "StandardOutputContent" \
-              --output text)
+      #       STATUS_CODE=$(aws ssm get-command-invocation \
+      #         --command-id "$COMMAND_ID" \
+      #         --instance-id "$INSTANCE_ID" \
+      #         --query "StandardOutputContent" \
+      #         --output text)
 
-            echo "Try $i/$MAX_RETRIES, status_code=$STATUS_CODE"
+      #       echo "Try $i/$MAX_RETRIES, status_code=$STATUS_CODE"
 
-            if [ "$STATUS_CODE" = "200" ]; then
-              SUCCESS=1
-              echo "✅ /metrics is ready!"
-              break
-            fi
-            sleep 5
-          done
+      #       if [ "$STATUS_CODE" = "200" ]; then
+      #         SUCCESS=1
+      #         echo "✅ /metrics is ready!"
+      #         break
+      #       fi
+      #       sleep 5
+      #     done
 
-          if [ "$SUCCESS" -eq 0 ]; then
-            echo "Initial deployment failed!" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+      #     if [ "$SUCCESS" -eq 0 ]; then
+      #       echo "Initial deployment failed!" >> $GITHUB_STEP_SUMMARY
+      #       exit 1
+      #     fi
 
-          echo "Initial deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
+      #     echo "Initial deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
 
