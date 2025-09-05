@@ -261,11 +261,10 @@ jobs:
 
           echo "Deployment validated successfully!" >> $GITHUB_STEP_SUMMARY
 
-
       # -----------------------------------------------
       # First deploy & validate (Docker Swarm)
       # -----------------------------------------------
-        - name: First deploy & validate
+      - name: First deploy & validate
         if: env.FIRST_DEPLOY == 'true'
         run: |
           echo "First deployment, no previous image to compare."
