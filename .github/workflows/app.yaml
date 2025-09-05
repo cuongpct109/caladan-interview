@@ -211,7 +211,7 @@ jobs:
             STATUS=$(aws ssm send-command \
               --targets "Key=instanceIds,Values=$INSTANCE_ID" \
               --document-name "AWS-RunShellScript" \
-              --parameters 'commands=["docker service ps latency-app --filter desired-state=Running --format {{.Name}}"]' \
+              --parameters 'commands=["docker service ps latency-app --filter desired-state=Running --format '{{.Name}} {{.CurrentState}}'"]' \
               --query "Command.CommandId" --output text)
       
             OUTPUT=$(aws ssm get-command-invocation \
