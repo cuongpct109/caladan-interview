@@ -1,4 +1,58 @@
-# Terraform
+# Python bytecode
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Cython
+*.c
+*.so
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# Pytest
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# IDEs
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform / Terragrunt
 *.tfstate
 *.tfstate.backup
 .terraform/
@@ -7,16 +61,4 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
-.terraform.lock.hcl
-
-# Terragrunt
 .terragrunt-cache/
-
-# OS / Editor
-*.swp
-*.swo
-*.bak
-.DS_Store
-.idea/
-.vscode/
-__pycache__/
